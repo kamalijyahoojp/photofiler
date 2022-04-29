@@ -3,15 +3,11 @@ package photofiler;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.text.MessageFormat;
 import java.text.NumberFormat;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 import javax.swing.SwingWorker;
@@ -33,7 +29,7 @@ public class DateTree extends SwingWorker<String, String> {
 	}
 	private final Runtime rt = Runtime.getRuntime();
 	private final String osName;
-	private final String osArch;
+	//private final String osArch;
 	private final File dir1;
 	private final File dir2;
 	private final String move;
@@ -42,7 +38,6 @@ public class DateTree extends SwingWorker<String, String> {
 	private void convert(File dir1) {
 		Object[] ymd = new Object[3];
 		String[] cmd = new String[5];
-		int progress = 0;
 		File[] files = dir1.listFiles();
 		for (File f : files){
 			String name = f.getName();
@@ -118,8 +113,6 @@ public class DateTree extends SwingWorker<String, String> {
 						message.append(' ');
 						message.append(cmd[4]);
 						publish(message.toString());
-						progress = (progress + 1) % 100;
-						setProgress(progress);
 						try {
 							Process process = rt.exec(cmd);
 							BufferedReader out = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -137,10 +130,6 @@ public class DateTree extends SwingWorker<String, String> {
 									idle = false;
 									msg = err.readLine();
 									publish(msg);
-								}
-								if (!idle) {
-									progress = (progress + 1) % 100;
-									setProgress(progress);
 								}
 							}
 							try {
@@ -166,7 +155,7 @@ public class DateTree extends SwingWorker<String, String> {
 	 */
 	public DateTree(String src, String dest, String move) {
 		osName = System.getProperty("os.name");
-		osArch = System.getProperty("os.arch");
+		//osArch = System.getProperty("os.arch");
 		dir1 = new File(src);
 		dir2 = new File(dest);
 		this.move = move;

@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -19,8 +20,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.Properties;
 
 import javax.swing.ButtonGroup;
@@ -35,6 +34,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 
@@ -43,6 +43,8 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 	private static final long serialVersionUID = 1L;
 	private Properties prop = new Properties();
 	private File lastDir = new File("./");
+	private DateTree worker = null;
+	private boolean executing = false;
 	private final JFileChooser fch = new JFileChooser("./");
 	private JPanel contentPane;
 	private final ButtonGroup btnGrpAction = new ButtonGroup();
@@ -64,6 +66,7 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 			public void run() {
 				try {
 					PhotoFilerUI frame = new PhotoFilerUI();
+					frame.pack();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -89,18 +92,23 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 			}
 		});
 
-		setTitle("Photo file tree arranger");
+		setTitle("Photo filer - Directory tree arranger");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 500, 400);
+		//setBounds(100, 100, 500, 400);
 		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		contentPane.setBorder(new EmptyBorder(4, 4, 4, 4));
 		setContentPane(contentPane);
-		contentPane.setLayout(new FlowLayout(FlowLayout.LEFT, 1, 0));
+		contentPane.setLayout(new BorderLayout());
 
+		JPanel controlPane = new JPanel();
+		contentPane.add(controlPane, BorderLayout.NORTH);
+		controlPane.setLayout(new GridLayout(5, 1));
+
+		// controlPane line 1:Action settings
 		JPanel panel = new JPanel();
 		panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		contentPane.add(panel);
-		panel.setLayout(new FlowLayout(FlowLayout.CENTER, 2, 0));
+		controlPane.add(panel);
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 2, 0));
 
 		JLabel lblAction = new JLabel("Action:");
 		lblAction.setAlignmentY(Component.TOP_ALIGNMENT);
@@ -119,10 +127,11 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 		btnGrpAction.add(rdoAction1);
 		panel.add(rdoAction1);
 
+		// controlPane line 2:Option settings
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		contentPane.add(panel_1);
-		panel_1.setLayout(new FlowLayout(FlowLayout.CENTER, 2, 0));
+		controlPane.add(panel_1);
+		panel_1.setLayout(new FlowLayout(FlowLayout.LEFT, 2, 0));
 
 		JLabel lblOption = new JLabel("Option:");
 		lblOption.setAlignmentY(0.0f);
@@ -145,10 +154,11 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 		rdoOption2.setFont(new Font("SansSerif", Font.PLAIN, 12));
 		panel_1.add(rdoOption2);
 
+		// controlPane line 3:Source dir settings
 		JPanel panel_2 = new JPanel();
 		panel_2.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		contentPane.add(panel_2);
-		panel_2.setLayout(new BorderLayout(2, 0));
+		controlPane.add(panel_2);
+		panel_2.setLayout(new BorderLayout(0, 0));
 
 		JLabel lblSourceDir = new JLabel("Source dir:");
 		lblSourceDir.setPreferredSize(new Dimension(100, 13));
@@ -167,10 +177,11 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 		});
 		panel_2.add(btnRefSrc, BorderLayout.EAST);
 
+		// controlPane line 4:Destination dir settings
 		JPanel panel_3 = new JPanel();
 		panel_3.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		contentPane.add(panel_3);
-		panel_3.setLayout(new BorderLayout(2, 0));
+		controlPane.add(panel_3);
+		panel_3.setLayout(new BorderLayout(0, 0));
 
 		JLabel lblDestinationDir = new JLabel("Destination dir:");
 		lblDestinationDir.setPreferredSize(new Dimension(100, 13));
@@ -189,9 +200,10 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 		});
 		panel_3.add(btnRefDst, BorderLayout.EAST);
 
+		// controlPane line 5:Button settings
 		JPanel panel_4 = new JPanel();
 		panel_4.setPreferredSize(new Dimension(400, 32));
-		contentPane.add(panel_4);
+		controlPane.add(panel_4);
 		panel_4.setLayout(new FlowLayout(FlowLayout.LEFT, 2, 0));
 
 		JButton btnOK = new JButton("OK");
@@ -210,17 +222,13 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 			}
 		});
 		panel_4.add(btnClose);
-
-		JPanel panel_5 = new JPanel();
-		contentPane.add(panel_5);
-		panel_5.setLayout(new BorderLayout(0, 0));
+		// end of controlPane
 
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setPreferredSize(new Dimension(480, 200));
-		panel_5.add(scrollPane, BorderLayout.NORTH);
-
 		textArea = new JTextArea();
 		scrollPane.setViewportView(textArea);
+		contentPane.add(scrollPane, BorderLayout.CENTER);
 	}
 
 	private void readCfg(){
@@ -301,9 +309,10 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 		}else{
 			actOpt.append('0');
 		}
-		DateTree sw = new DateTree(srcDir, dstDir, actOpt.toString());
-		sw.addPropertyChangeListener(this);
-		sw.execute();
+		worker = new DateTree(srcDir, dstDir, actOpt.toString());
+		worker.addPropertyChangeListener(this);
+		worker.execute();
+		executing = true;
 	}
 
 	@Override
@@ -313,6 +322,9 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 			textArea.append(evt.getNewValue().toString());
 			textArea.append("\n");
 		} else if ("state".equals(prop)) {
+			if (SwingWorker.StateValue.DONE.equals(evt.getNewValue())) {
+				executing = false;
+			}
 			JOptionPane.showMessageDialog(this, evt.getNewValue(), "State info", JOptionPane.INFORMATION_MESSAGE);
 		} else if ("event".equals(prop)) {
 			JOptionPane.showMessageDialog(this, evt.getNewValue(), "Event info", JOptionPane.INFORMATION_MESSAGE);
@@ -324,6 +336,9 @@ public class PhotoFilerUI extends JFrame implements PropertyChangeListener {
 	}
 
 	private void close(){
+		if (executing && worker != null) {
+			worker.cancel(true);
+		}
 		this.dispose();
 	}
 	protected JRadioButton getRdoAction0() {
